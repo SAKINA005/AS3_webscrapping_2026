@@ -42,114 +42,141 @@ streamlit run app/streamlit_app.py
 ## 📁 Structure du Projet
 
 ```
-senwebstats/
-├── main.py                          # Point d'entrée principal
-├── requirements.txt
-├── config/
-│   └── sites.py                     # Liste des sites cibles
-├── database/
-│   └── schema.py                    # Schéma SQLite + fonctions DB
-├── data_collection/
-│   ├── scrapers/
-│   │   └── metadata_scraper.py      # Scraper HTML principal
-│   └── apis/
-│       ├── pagespeed_collector.py   # Google PageSpeed API
-│       └── backlinks_collector.py   # CommonCrawl backlinks
-├── processing/                      # À venir : modèle CTR
-├── app/
-│   └── streamlit_app.py             # Dashboard Streamlit
-└── data/
-    └── senwebstats.db               # Base SQLite (générée)
+AS3_webscrapping_2026/
+├── main.py                  # Point d'entrée CLI
+├── metadata_scraper.py      # Scraper HTML principal
+├── pagespeed_collector.py   # Google PageSpeed API
+├── backlinks_collector.py   # Backlinks CommonCrawl
+├── scoring_model.py         # Modèle de scoring & estimation trafic
+├── streamlit_app.py         # Dashboard Streamlit
+├── schema.py                # Schéma SQLite + fonctions DB
+├── sites.py                 # Liste des sites cibles + config
+├── setup_project.py         # Initialisation du projet
+├── .streamlit/              # Configuration thème Streamlit
+└── requirements.txt
 ```
+
 
 ---
 
 ## 🔧 Commandes Disponibles
 
 | Commande | Description |
-|----------|-------------|
+|---|---|
 | `python main.py init` | Initialiser DB + insérer les sites |
 | `python main.py crawl` | Crawler tous les sites |
-| `python main.py crawl --cat presse` | Crawler une catégorie |
-| `python main.py perf` | Collecter les scores PageSpeed |
-| `python main.py backlinks` | Collecter les backlinks |
-| `python main.py full` | Tout collecter en une fois |
-| `python main.py report` | Rapport rapide en terminal |
-| `streamlit run app/streamlit_app.py` | Lancer le dashboard |
+| `python main.py crawl --cat presse` | Crawler une catégorie spécifique |
+| `python main.py perf` | Collecter les scores PageSpeed (mobile) |
+| `python main.py perf --strategy desktop` | Scores PageSpeed en mode desktop |
+| `python main.py backlinks` | Collecter les backlinks CommonCrawl |
+| `python main.py full` | Tout collecter en une seule commande |
+| `python main.py report` | Rapport synthétique en terminal |
+| `python scoring_model.py` | Calculer les scores & estimer le trafic |
+| `streamlit run streamlit_app.py` | Lancer le dashboard interactif |
 
 ---
 
 ## 📊 Métriques Collectées
 
-### Métadonnées HTML
+### Métadonnées HTML (`metadata_scraper.py`)
 - Title, meta description, meta keywords
-- Balises Open Graph (titre, description, image)
+- Balises Open Graph (og:title, og:description, og:image)
 - Canonical URL, robots meta
-- H1, H2 count
+- Comptage H1 / H2
 - Liens internes / externes
-- Images (avec/sans alt)
-- Nombre de mots
+- Images totales et images avec attribut `alt`
+- Nombre de mots dans la page
 - SSL, Sitemap, Robots.txt
+- Code HTTP et temps de réponse (ms)
 
-### Performance (PageSpeed API)
-- Score Performance, SEO, Accessibilité, Bonnes pratiques
-- LCP (Largest Contentful Paint)
-- FCP (First Contentful Paint)
-- TTFB (Time To First Byte)
-- CLS (Cumulative Layout Shift)
-- TTI (Time To Interactive)
+### Performance (`pagespeed_collector.py`)
+- Scores Performance, SEO, Accessibilité, Bonnes Pratiques (0–100)
+- LCP · FCP · TTFB · CLS · TTI
 
-### Backlinks (CommonCrawl)
+### Backlinks (`backlinks_collector.py`)
 - Total pages indexées
-- Domaines référents
+- Nombre de domaines référents
 - Top domaines référents
 - Évolution vs collecte précédente
+
+---
+
+## 🧮 Modèle de Scoring (`scoring_model.py`)
+
+Le cœur du projet : un modèle propriétaire qui calcule 4 scores pour chaque site
+à partir des données collectées, sans recourir à des API payantes.
+
+| Score | Composition | Poids dans le score global |
+|---|---|---|
+| **Autorité** | Backlinks (60%) + Domaines référents (40%) | 45% |
+| **Qualité** | SEO (40%) + Performance (35%) + Accessibilité (25%) | 35% |
+| **Technique** | Vitesse (40%) + SSL (20%) + Sitemap (15%) + Contenu (25%) | 20% |
+| **Global** | Moyenne pondérée des 3 scores | — |
+
+**Estimation du trafic mensuel** — loi de puissance par catégorie :
+
+trafic_estimé = base_catégorie × (score_global / 100) ^ 1.5
+
+> L'exposant 1.5 modélise la domination des meilleurs sites, conformément
+> à la loi de puissance observée sur le web (effet "winner-takes-most").
+
+Bases calibrées sur SimilarWeb Africa 2024 :
+
+| Catégorie | Base mensuelle |
+|---|---|
+| Presse | 250 000 visites |
+| Téléphonie | 120 000 visites |
+| E-commerce | 80 000 visites |
+| Banque/Finance | 60 000 visites |
+| Emploi | 40 000 visites |
 
 ---
 
 ## 🗂️ Sites Suivis
 
 | Catégorie | Sites |
-|-----------|-------|
+|---|---|
 | 📰 Presse | Seneweb, Dakaractu, Senenews, Rewmi, Leral, Senego... |
-| 🛒 E-commerce | Jumia, Expat Dakar, CoinAfrique, Afrikrea... |
+| 🛒 E-commerce | Jumia SN, Expat Dakar, CoinAfrique, Afrikrea... |
 | 📱 Téléphonie | Orange SN, Free SN, Expresso, Sonatel |
-| 🏦 Banque/Finance | CBAO, Ecobank, Wave, Orange Money |
-| 💼 Emploi | Senjob, Emploi.sn, Rekrute |
+| 🏦 Banque/Finance | CBAO, Ecobank SN, Wave, Orange Money |
+| 💼 Emploi | Senjob, Emploi.sn, Rekrute SN |
 
 ---
 
-## 🗺️ Roadmap
+## ⚠️ Bonnes Pratiques Respectées
 
-- [x] Phase 1 : Scraper métadonnées HTML
-- [x] Phase 1 : Performance PageSpeed
-- [x] Phase 1 : Backlinks CommonCrawl
-- [x] Phase 1 : Dashboard Streamlit basique
-- [ ] Phase 2 : Modèle CTR × Volume (estimation trafic)
-- [ ] Phase 2 : Scraping SERP Google (positions mots-clés)
-- [ ] Phase 2 : Analyse de tendances temporelles
-- [ ] Phase 3 : Scheduler automatique (collecte quotidienne)
-- [ ] Phase 3 : Alertes sur changements significatifs
-- [ ] Phase 4 : API FastAPI publique
-- [ ] Phase 4 : Export CSV/Excel des données
-
----
-
-## ⚠️ Bonnes Pratiques
-
-- Délais entre requêtes : 2-5 secondes
+- Délais aléatoires entre requêtes (2–5 secondes)
 - Rotation des User-Agents
-- Respect des fichiers robots.txt
+- Respect des fichiers `robots.txt`
 - API PageSpeed : gratuite jusqu'à 25 000 req/jour
-- CommonCrawl : utilisation de l'API index (pas de téléchargement massif)
+- CommonCrawl : API Index uniquement (pas de téléchargement massif)
 
 ---
 
-## 👨‍💻 Prochaines Étapes
+## 🗺️ Roadmap élaboré
 
-Pour estimer le trafic comme Semrush, il faudra :
-1. Collecter les mots-clés pour lesquels chaque site se positionne (scraping SERP)
-2. Récupérer les volumes de recherche mensuels (Google Keyword Planner ou scraping)
-3. Appliquer le modèle CTR par position : `trafic = volume × CTR[position]`
-4. Agréger par site pour obtenir le trafic mensuel estimé
-python app/dashboard.py
+- [] Scraper métadonnées HTML
+- [] Collecte Google PageSpeed (Core Web Vitals)
+- [] Backlinks CommonCrawl
+- [] Base de données SQLite structurée
+- [] Dashboard Streamlit interactif
+- [] Modèle de scoring multi-critères
+- [] Estimation de trafic (loi de puissance)
+- [ ] Modèle CTR × Volume de recherche réel
+- [ ] Scraping positions SERP Google
+- [ ] Analyse de tendances temporelles
+- [ ] Scheduler automatique (collecte quotidienne)
+- [ ] API FastAPI publique
+- [ ] Export CSV/Excel depuis le dashboard
+
+---
+
+## 👩‍💻 Auteurs
+
+Projet réalisé dans le cadre du cours **AS3 — Webscraping**
+Promotion 2025-2026
+
+
+
+
