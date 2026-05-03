@@ -156,13 +156,13 @@ Bases calibrées sur SimilarWeb Africa 2024 :
 
 ## 🗺️ Roadmap élaboré
 
-- [] Scraper métadonnées HTML
-- [] Collecte Google PageSpeed (Core Web Vitals)
-- [] Backlinks CommonCrawl
-- [] Base de données SQLite structurée
-- [] Dashboard Streamlit interactif
-- [] Modèle de scoring multi-critères
-- [] Estimation de trafic (loi de puissance)
+- [ ] Scraper métadonnées HTML
+- [ ] Collecte Google PageSpeed (Core Web Vitals)
+- [ ] Backlinks CommonCrawl
+- [ ] Base de données SQLite structurée
+- [ ] Dashboard Streamlit interactif
+- [ ] Modèle de scoring multi-critères
+- [ ] Estimation de trafic (loi de puissance)
 - [ ] Modèle CTR × Volume de recherche réel
 - [ ] Scraping positions SERP Google
 - [ ] Analyse de tendances temporelles
